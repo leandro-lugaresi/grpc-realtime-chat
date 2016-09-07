@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package chat;
+
+import "google/api/annotations.proto";
+import "user.proto";
+
+service Chat {
+    rpc Join(JoinRequest) returns (AckResponse) {}
+
+    rpc Leave(LeaveRequest) returns (AckResponse) {}
+
+    rpc GetConversations(PaginatedRequest) returns (ConversationsResponse) {}
+
+    rpc GetLastMessages(GetLastMessagesRequest) returns (LastMessagesResponse) {}
+
+    rpc Send(SendRequest) returns (SendResponse) {}
+
+    rpc Receive(ReceiveRequest) returns (stream MessagesResponse) {}
+
+}
+
+message Channel {
+    string uuid = 1;
+    repeated User members = 2;
+}
+
+message Message {
+    string uuid = 1;
+    oneOf
+}
+
+message JoinRequest {
+
+}

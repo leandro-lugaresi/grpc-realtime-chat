@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package user;
+
+message User {
+    string uuid = 1;
+    string name = 2;
+    string username = 3;
+    string photo = 4;
+}
