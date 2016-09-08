@@ -27,9 +27,18 @@ message Channel {
 
 message Message {
     string uuid = 1;
-    oneOf
+    User sender = 2;
+    oneof content {
+        string text = 5;
+        bytes audio = 6;
+        bytes image = 7;
+    }
+    optional string delivered_date = 8;
 }
 
-message JoinRequest {
+message AckResponse {
 
+}
+message JoinRequest {
+    Channel channel_to_join = 1;
 }
