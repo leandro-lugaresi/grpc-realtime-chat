@@ -3,21 +3,15 @@ syntax = "proto3";
 package chat;
 
 import "google/api/annotations.proto";
+import "google/rpc/status.proto";
 import "user.proto";
 
 service Chat {
-    rpc Join(JoinRequest) returns (AckResponse) {}
+    rpc CreateChat(CreateChatRequest) returns (StatusResponse) {}
 
-    rpc Leave(LeaveRequest) returns (AckResponse) {}
+    rpc GetConversations(PaginatedRequest) returns (Chats) {}
 
-    rpc GetConversations(PaginatedRequest) returns (ConversationsResponse) {}
-
-    rpc GetLastMessages(GetLastMessagesRequest) returns (LastMessagesResponse) {}
-
-    rpc Send(SendRequest) returns (SendResponse) {}
-
-    rpc Receive(ReceiveRequest) returns (stream MessagesResponse) {}
-
+    rpc LeaveChat(LeaveChatRequest) returns (StatusResponse) {}
 }
 
 message Channel {

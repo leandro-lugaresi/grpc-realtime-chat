@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package chat;
+
+import "google/api/annotations.proto";
+import "google/rpc/status.proto";
+import "google/protobuf/empty.proto";
+import "user.proto";
+
+service Message {
+    rpc GetHistory(GetHistoryRequest) returns (HistoryResponse) {}
+
+    rpc ReadHistory(ReadHistoryRequest) returns (ReadHistoryResponse) {}
+
+    rpc SetTyping(TypingRequest) returns (google.protobuf.Empty) {}
+
+    rpc Talk(stream TalkRequest) returns (stream TalkResponse) {}
+}
+
+message Channel {
+    string uuid = 1;
+    repeated User members = 2;
+}
+
+message Message {
+    string uuid = 1;
+    User sender = 2;
+    oneof content {
+        string text = 5;
+        bytes audio = 6;
+        bytes image = 7;
+    }
+    uint32 timestamp = 8;
+    bool readed = 9;
+}
+
+message Event {
+    enum EventType {
+        ACK = 0;
+        NOACK = 1;
+        JOIN = 2;
+        EXIT = 3;
+    }
+    EventType type = 1;
+    uint32 timestamp = 2;
+}
+
+message GetHistoryRequest {
+    int32 limit = 1;
+    int32 offset = 2;
+    oneof target {
+        User user = 3;
+        Channel channel = 4;
+    }
+}
+
+message HistoryResponse {
+    repeated Message messages = 1;
+}
+
+message ReadHistoryRequest {
+    string last_id = 1;
+    oneof target {
+        User user = 3;
+        Channel channel = 4;
+    }
+}
+
+message ReadHistoryResponse {}
+
+message TypingRequest {
+    oneof target {
+        User user = 1;
+        Channel channel = 2;
+    }
+    enum Action {
+        CANCEL = 0;
+        TYPING = 1;
+        RECORDING_AUDIO = 2;
+        UPLOAD_AUDIO = 3;
+        UPLOAD_PHOTO = 4;
+    }
+    Action action = 3;
+}
+
+message TalkRequest {
+    Channel channel = 1;
+    Message message = 2;
+}
+
+message TalkResponse {
+    Channel channel = 1;
+    oneof content {
+        Message message = 2;
+        Event event = 3;
+    }
+}
