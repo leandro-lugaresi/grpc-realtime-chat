@@ -3,8 +3,6 @@ syntax = "proto3";
 package chat;
 
 import "google/api/annotations.proto";
-import "google/rpc/status.proto";
-import "google/protobuf/empty.proto";
 import "user.proto";
 
 service Message {
@@ -12,14 +10,13 @@ service Message {
 
     rpc ReadHistory(ReadHistoryRequest) returns (ReadHistoryResponse) {}
 
-    rpc SetTyping(TypingRequest) returns (google.protobuf.Empty) {}
-
-    rpc Talk(stream TalkRequest) returns (stream TalkResponse) {}
+    rpc Comunicate(stream ChatMessage) returns (stream ChatMessage) {}
 }
 
 message Channel {
     string uuid = 1;
-    repeated User members = 2;
+    string name = 2;
+    repeated User members = 3;
 }
 
 message Message {
@@ -36,13 +33,28 @@ message Message {
 
 message Event {
     enum EventType {
-        ACK = 0;
-        NOACK = 1;
-        JOIN = 2;
-        EXIT = 3;
+        CANCEL = 0;
+        TYPING = 1;
+        RECORDING_AUDIO = 2;
+        UPLOAD_AUDIO = 3;
+        UPLOAD_PHOTO = 4;
+        JOIN_CHANNEL = 5;
+        EXIT_CHANNEL = 6;
     }
     EventType type = 1;
     uint32 timestamp = 2;
+    UserRef user = 3;
+}
+
+message ChatMessage {
+    oneof target {
+        UserRef user = 3;
+        ChannelRef channel = 4;
+    }
+    oneof content {
+        Message message = 2;
+        Event event = 3;
+    }
 }
 
 message GetHistoryRequest {
@@ -67,31 +79,3 @@ message ReadHistoryRequest {
 }
 
 message ReadHistoryResponse {}
-
-message TypingRequest {
-    oneof target {
-        User user = 1;
-        Channel channel = 2;
-    }
-    enum Action {
-        CANCEL = 0;
-        TYPING = 1;
-        RECORDING_AUDIO = 2;
-        UPLOAD_AUDIO = 3;
-        UPLOAD_PHOTO = 4;
-    }
-    Action action = 3;
-}
-
-message TalkRequest {
-    Channel channel = 1;
-    Message message = 2;
-}
-
-message TalkResponse {
-    Channel channel = 1;
-    oneof content {
-        Message message = 2;
-        Event event = 3;
-    }
-}
