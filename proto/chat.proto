@@ -7,32 +7,15 @@ import "google/rpc/status.proto";
 import "user.proto";
 
 service Chat {
+    rpc GetConversations(PaginatedRequest) returns (ConversationsResponse) {}
+
     rpc CreateChat(CreateChatRequest) returns (StatusResponse) {}
 
-    rpc GetConversations(PaginatedRequest) returns (Chats) {}
-
     rpc LeaveChat(LeaveChatRequest) returns (StatusResponse) {}
+
+    rpc JoinChat(JoinChatRequest) returns (StatusResponse) {}
 }
 
-message Channel {
-    string uuid = 1;
-    repeated User members = 2;
-}
-
-message Message {
-    string uuid = 1;
-    User sender = 2;
-    oneof content {
-        string text = 5;
-        bytes audio = 6;
-        bytes image = 7;
-    }
-    optional string delivered_date = 8;
-}
-
-message AckResponse {
-
-}
 message JoinRequest {
     Channel channel_to_join = 1;
 }

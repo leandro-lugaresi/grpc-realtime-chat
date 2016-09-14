@@ -33,7 +33,7 @@ message Message {
 
 message Event {
     enum EventType {
-        CANCEL = 0;
+        CANCEL_TYPING = 0;
         TYPING = 1;
         RECORDING_AUDIO = 2;
         UPLOAD_AUDIO = 3;

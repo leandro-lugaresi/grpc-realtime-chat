@@ -2,6 +2,18 @@ syntax = "proto3";
 
 package user;
 
+service Users {
+    rpc SignUp(SignUpRequest) returns (StatusResponse) {}
+
+    rpc SignIn(SignInRequest) returns (StatusResponse) {}
+
+    rpc UpdateUser(UpdateUserRequest) returns (StatusResponse) {}
+
+    rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
+
+    rpc ChangePassword(ChangePasswordRequest) returns (StatusResponse) {}
+}
+
 message User {
     string uuid = 1;
     string name = 2;
