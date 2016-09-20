@@ -3,35 +3,26 @@ syntax = "proto3";
 package chat;
 
 import "google/api/annotations.proto";
+import "google/rpc/status.proto";
+import "google/protobuf/timestamp.proto";
 import "user.proto";
+import "chat.proto";
 
 service Message {
-    rpc GetHistory(GetHistoryRequest) returns (HistoryResponse) {}
+    //Return the history of messages for an user or channel in DESC order.
+    rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse) {}
 
-    rpc ReadHistory(ReadHistoryRequest) returns (ReadHistoryResponse) {}
+    //Notifies the reading of messages from a channel or a user.
+    rpc ReadHistory(ReadHistoryRequest) returns (StatusResponse) {}
 
+    //Send Messages or events to channels or users and
+    // receive messages or evets from channels or users.
     rpc Comunicate(stream ChatMessage) returns (stream ChatMessage) {}
 }
 
-message Channel {
-    string uuid = 1;
-    string name = 2;
-    repeated User members = 3;
-}
-
 message Message {
-    string uuid = 1;
+    string uid = 1;
     User sender = 2;
-    oneof content {
-        string text = 5;
-        bytes audio = 6;
-        bytes image = 7;
-    }
-    uint32 timestamp = 8;
-    bool readed = 9;
-}
-
-message Event {
     enum EventType {
         CANCEL_TYPING = 0;
         TYPING = 1;
@@ -41,41 +32,41 @@ message Event {
         JOIN_CHANNEL = 5;
         EXIT_CHANNEL = 6;
     }
-    EventType type = 1;
-    uint32 timestamp = 2;
-    UserRef user = 3;
+    EventType type = 3;
+    oneof content {
+        string text = 5;
+        bytes audio = 6;
+        bytes image = 7;
+    }
+    google.protobuf.Timestamp creation_time = 8;
+    bool readed = 9;
 }
 
 message ChatMessage {
     oneof target {
-        UserRef user = 3;
-        ChannelRef channel = 4;
+        string user_uid = 1;
+        string channel_uid = 2;
     }
-    oneof content {
-        Message message = 2;
-        Event event = 3;
-    }
+    Message message = 3;
 }
 
 message GetHistoryRequest {
     int32 limit = 1;
     int32 offset = 2;
     oneof target {
-        User user = 3;
-        Channel channel = 4;
+        string user_uid = 3;
+        string channel_uid = 4;
     }
 }
 
-message HistoryResponse {
+message GetHistoryResponse {
     repeated Message messages = 1;
 }
 
 message ReadHistoryRequest {
     string last_id = 1;
     oneof target {
-        User user = 3;
-        Channel channel = 4;
+        string user_uid = 3;
+        string channel_uid = 4;
     }
 }
-
-message ReadHistoryResponse {}
