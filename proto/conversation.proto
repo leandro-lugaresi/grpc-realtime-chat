@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package chat;
+
+import "google/api/annotations.proto";
+import "google/rpc/status.proto";
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+service Conversation {
+    // Return conversations ordered by last update date
+    rpc Get(GetConversationsRequest) returns (GetConversationsResponse) {}
+
+    rpc Create(Conversation) returns (StatusResponse) {}
+
+    rpc Leave(LeaveConversationRequest) returns (StatusResponse) {}
+
+    rpc AddMember(AddMemberRequest) returns (StatusResponse) {}
+
+    rpc RemoveMember(RemoveMemberRequest) returns (StatusResponse) {}
+
+    //Return the history of messages for an conversation in DESC order.
+    rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse) {}
+
+    //Notifies the reading of messages from a channel or a user.
+    rpc ReadHistory(ReadHistoryRequest) returns (StatusResponse) {}
+
+    //Send Messages or events to channels or users and
+    // receive messages or evets from channels or users.
+    rpc Comunicate(stream ChatMessage) returns (stream ChatMessage) {}
+
+}
+
+message Conversation {
+    enum ConversationType {
+        INDIVIDUAL= 0;
+        CHANNEL= 1;
+    }
+    string uid = 1;
+    string name = 2;
+    ConversationType type = 1;
+    repeated User members = 4;
+    User owner = 5;
+    bytes image = 6;
+    google.protobuf.Timestamp creation_time = 20;
+    // Last update time (changes on conversations or last message time sent)
+    google.protobuf.Timestamp update_time = 21;
+}
+
+message Message {
+    string uid = 1;
+    User sender = 2;
+
+    oneof content {
+        string text = 5;
+        bytes audio = 6;
+        bytes image = 7;
+    }
+    google.protobuf.Timestamp creation_time = 8;
+    google.protobuf.Timestamp delivery_time = 9;
+    google.protobuf.Timestamp readed_time = 10;
+}
+
+message Event {
+    enum EventType {
+        CANCEL_TYPING = 0;
+        TYPING = 1;
+        RECORDING_AUDIO = 2;
+        UPLOAD_AUDIO = 3;
+        UPLOAD_PHOTO = 4;
+        JOIN_CHANNEL = 5;
+        EXIT_CHANNEL = 6;
+    }
+    EventType type = 3;
+}
+
+message GetConversationsRequest {
+    int32 limit = 1;
+    int32 offset = 2;
+    string filter = 3;
+}
+
+message GetConversationsResponse {
+    repeated Conversation conversations = 1;
+}
+
+message LeaveConversationRequest {
+    string conversation_uid = 1;
+}
+
+message AddMemberRequest {
+    string conversation_uid = 1;
+    string user_uid = 2;
+}
+
+message RemoveMemberRequest {
+    string conversation_uid = 1;
+    string user_uid = 2;
+}
+
+message StatusResponse  {
+    bool ack = 1;
+    google.rpc.status status = 2;
+}
+
+message ChatMessage {
+    Conversation conversation = 1;
+    Message message = 3;
+}
+
+message GetHistoryRequest {
+    int32 limit = 1;
+    int32 offset = 2;
+    string conversation_uid = 1;
+}
+
+message GetHistoryResponse {
+    repeated Message messages = 1;
+}
+
+message ReadHistoryRequest {
+    string last_message_uid = 1;
+    string conversation_uid = 2;
+}
