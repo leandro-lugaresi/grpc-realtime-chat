@@ -7,41 +7,40 @@ import "google/rpc/status.proto";
 import "google/protobuf/timestamp.proto";
 import "user.proto";
 
-service Conversation {
-    // Return conversations ordered by last update date
-    rpc Get(GetConversationsRequest) returns (GetConversationsResponse) {}
-
-    rpc Create(Conversation) returns (StatusResponse) {}
-
-    rpc Leave(LeaveConversationRequest) returns (StatusResponse) {}
-
-    rpc AddMember(AddMemberRequest) returns (StatusResponse) {}
-
-    rpc RemoveMember(RemoveMemberRequest) returns (StatusResponse) {}
-
+service MessageService {
     //Return the history of messages for an conversation in DESC order.
     rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse) {}
 
     //Notifies the reading of messages from a channel or a user.
     rpc ReadHistory(ReadHistoryRequest) returns (StatusResponse) {}
 
-    //Send Messages or events to channels or users and
-    // receive messages or evets from channels or users.
+    //Send and receive Messages or events to/from conversations.
     rpc Comunicate(stream ChatMessage) returns (stream ChatMessage) {}
+}
 
+service ConversationService {
+    // Return conversations ordered by last update date
+    rpc Get(GetConversationsRequest) returns (GetConversationsResponse) {}
+
+    rpc CreateGroup(CreateConversationRequest) returns (StatusResponse) {}
+
+    rpc Leave(LeaveConversationRequest) returns (StatusResponse) {}
+
+    rpc AddMember(AddMemberRequest) returns (StatusResponse) {}
+
+    rpc RemoveMember(RemoveMemberRequest) returns (StatusResponse) {}
 }
 
 message Conversation {
     enum ConversationType {
         INDIVIDUAL= 0;
-        CHANNEL= 1;
+        GROUP= 1;
     }
     string uid = 1;
-    string name = 2;
-    ConversationType type = 1;
+    string title = 2;
+    ConversationType type = 3;
     repeated User members = 4;
-    User owner = 5;
-    bytes image = 6;
+    bytes image = 5;
     google.protobuf.Timestamp creation_time = 20;
     // Last update time (changes on conversations or last message time sent)
     google.protobuf.Timestamp update_time = 21;
@@ -50,28 +49,47 @@ message Conversation {
 message Message {
     string uid = 1;
     User sender = 2;
-
     oneof content {
+        ActionEvent event = 3;
         string text = 5;
         bytes audio = 6;
         bytes image = 7;
     }
     google.protobuf.Timestamp creation_time = 8;
     google.protobuf.Timestamp delivery_time = 9;
-    google.protobuf.Timestamp readed_time = 10;
 }
 
-message Event {
+message ActionEvent {
     enum EventType {
+        CREATED_GROUP = 0;
+        UPDATED_GROUP = 1;
+        JOIN_GROUP = 2;
+        LEAVE_GROUP = 3;
+        ADD_MEMBER = 4;
+        REMOVE_MEMBER = 5;
+        EDIT_TITLE = 6;
+    }
+    EventType event = 1;
+    // Extra key:value data to provide more context to events
+    // this will vary by EventType
+    // example: `{ "oldTitle": "Foo", "newTitle":"Bar" }`
+    map<string, string> extra_params = 2;
+}
+
+message TypingMessage {
+    enum ActionType {
         CANCEL_TYPING = 0;
         TYPING = 1;
         RECORDING_AUDIO = 2;
-        UPLOAD_AUDIO = 3;
-        UPLOAD_PHOTO = 4;
-        JOIN_CHANNEL = 5;
-        EXIT_CHANNEL = 6;
+        UPLOADING_AUDIO = 3;
+        UPLOADING_PHOTO = 4;
     }
-    EventType type = 3;
+    User sender = 1;
+    ActionType type = 2;
+}
+
+message CreateConversationRequest {
+
 }
 
 message GetConversationsRequest {
@@ -105,7 +123,10 @@ message StatusResponse  {
 
 message ChatMessage {
     Conversation conversation = 1;
-    Message message = 3;
+    oneof content {
+        TypingMessage typing = 2;
+        Message message = 3;
+    }
 }
 
 message GetHistoryRequest {
