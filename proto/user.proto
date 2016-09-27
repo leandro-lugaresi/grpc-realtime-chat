@@ -1,46 +1,60 @@
 syntax = "proto3";
 
-package chat;
+package user;
 
-service Users {
+service UserService {
     rpc SignUp(SignUpRequest) returns (StatusResponse) {}
 
     rpc SignIn(SignInRequest) returns (StatusResponse) {}
 
-    rpc UpdateUser(UpdateUserRequest) returns (StatusResponse) {}
+    rpc UpdateProfile(UpdateProfileRequest) returns (StatusResponse) {}
 
     rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
 
     rpc ChangePassword(ChangePasswordRequest) returns (StatusResponse) {}
 }
 
+
 message User {
     string uid = 1;
     string name = 2;
     string username = 3;
-    string photo = 4;
+    bytes photo = 4;
+}
+
+message UserRef {
+    string uid = 1;
 }
 
 message SignUpRequest {
-
+    string name = 1;
+    string username = 2;
+    string password = 3;
+    bytes photo = 7;
 }
 
-message SignUpRequest {
-
+message SignInRequest {
+    string username = 1;
+    string password = 2;
 }
 
-message UpdateUserRequest {
-
+message UpdateProfileRequest {
+    string username = 1;
+    string name = 2;
+    bytes photo = 3;
 }
 
 message GetUsersRequest {
-
+    repeated UserRef ids = 1;
+    string name = 2;
+    string username = 3;
 }
 
 message GetUsersResponse {
-
+    repeated User users = 1;
 }
 
 message ChangePasswordRequest {
-
+    string old_password = 1;
+    string new_password = 2;
 }
