@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user;
 
+import "google/rpc/status.proto";
+
 service UserService {
     rpc SignUp(SignUpRequest) returns (StatusResponse) {}
 
@@ -57,4 +59,9 @@ message GetUsersResponse {
 message ChangePasswordRequest {
     string old_password = 1;
     string new_password = 2;
+}
+
+message StatusResponse  {
+    bool ack = 1;
+    google.rpc.Status status = 2;
 }
