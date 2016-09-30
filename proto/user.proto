@@ -2,66 +2,65 @@ syntax = "proto3";
 
 package user;
 
-import "google/rpc/status.proto";
+import "google/protobuf/empty.proto";
 
 service UserService {
-    rpc SignUp(SignUpRequest) returns (StatusResponse) {}
+	rpc SignUp(SignUpRequest) returns (Token) {}
 
-    rpc SignIn(SignInRequest) returns (StatusResponse) {}
+	rpc SignIn(SignInRequest) returns (Token) {}
 
-    rpc UpdateProfile(UpdateProfileRequest) returns (StatusResponse) {}
+	rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty) {}
 
-    rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
+	rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
 
-    rpc ChangePassword(ChangePasswordRequest) returns (StatusResponse) {}
+	rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty) {}
 }
 
 
 message User {
-    string uid = 1;
-    string name = 2;
-    string username = 3;
-    bytes photo = 4;
+	string uid = 1;
+	string name = 2;
+	string username = 3;
+	bytes photo = 4;
 }
 
 message UserRef {
-    string uid = 1;
+	string uid = 1;
 }
 
 message SignUpRequest {
-    string name = 1;
-    string username = 2;
-    string password = 3;
-    bytes photo = 7;
+	string name = 1;
+	string username = 2;
+	string password = 3;
+	bytes photo = 7;
+}
+
+message Token {
+	string token = 1;
 }
 
 message SignInRequest {
-    string username = 1;
-    string password = 2;
+	string username = 1;
+	string password = 2;
 }
 
 message UpdateProfileRequest {
-    string username = 1;
-    string name = 2;
-    bytes photo = 3;
+	string username = 1;
+	string name = 2;
+	bytes photo = 3;
 }
 
 message GetUsersRequest {
-    repeated UserRef ids = 1;
-    string name = 2;
-    string username = 3;
+	repeated UserRef ids = 1;
+	string name = 2;
+	string username = 3;
 }
 
 message GetUsersResponse {
-    repeated User users = 1;
+	repeated User users = 1;
 }
 
 message ChangePasswordRequest {
-    string old_password = 1;
-    string new_password = 2;
-}
-
-message StatusResponse  {
-    bool ack = 1;
-    google.rpc.Status status = 2;
+	string old_password = 1;
+	string new_password = 2;
 }
