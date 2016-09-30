@@ -4,18 +4,19 @@ package user;
 
 import "google/protobuf/empty.proto";
 
-service UserService {
+service AuthService {
 	rpc SignUp(SignUpRequest) returns (Token) {}
 
 	rpc SignIn(SignInRequest) returns (Token) {}
+}
 
+service UserService {
 	rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty) {}
 
 	rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
 
 	rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty) {}
 }
-
 
 message User {
 	string uid = 1;
