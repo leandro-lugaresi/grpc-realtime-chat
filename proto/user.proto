@@ -25,10 +25,6 @@ message User {
 	bytes photo = 4;
 }
 
-message UserRef {
-	string uid = 1;
-}
-
 message SignUpRequest {
 	string name = 1;
 	string username = 2;
@@ -52,7 +48,7 @@ message UpdateProfileRequest {
 }
 
 message GetUsersRequest {
-	repeated UserRef ids = 1;
+	repeated string uids = 1;
 	string name = 2;
 	string username = 3;
 }
