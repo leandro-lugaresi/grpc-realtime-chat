@@ -1,0 +1,12 @@
+package: .
+import:
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+  - ptypes/empty
+  - ptypes/timestamp
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: google.golang.org/grpc
+  version: ^1.0.1-GA
