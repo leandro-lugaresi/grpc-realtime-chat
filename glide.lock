@@ -1,6 +1,8 @@
-hash: 52c1ed6388410f8648c02f2ab59050e1c32d325b4c2dcaa971c5f7cd213c81fe
-updated: 2016-10-01T13:26:12.0569916-03:00
+hash: 901c19f528167ece121d5ba27e87efec429fa2e3459f6aca59023cdcd5d31035
+updated: 2016-10-02T17:59:54.16116591-03:00
 imports:
+- name: github.com/dgrijalva/jwt-go
+  version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/golang/protobuf
   version: df1d3ca07d2d07bba352d5b73c4313b4e2a6203e
   subpackages:

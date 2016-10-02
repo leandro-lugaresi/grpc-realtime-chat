@@ -10,3 +10,5 @@ import:
   - context
 - package: google.golang.org/grpc
   version: ^1.0.1-GA
+- package: github.com/dgrijalva/jwt-go
+  version: ^3.0.0
