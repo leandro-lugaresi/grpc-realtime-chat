@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package chat;
+package chatpb;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
