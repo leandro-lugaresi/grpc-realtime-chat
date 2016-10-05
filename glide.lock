@@ -1,5 +1,5 @@
-hash: 901c19f528167ece121d5ba27e87efec429fa2e3459f6aca59023cdcd5d31035
-updated: 2016-10-02T17:59:54.16116591-03:00
+hash: 5702d46a78b4e28880320b515d8e80bcf17eb66eadc92cb822fb7f5dee8bbc77
+updated: 2016-10-02T22:38:51.4247018-03:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -9,8 +9,15 @@ imports:
   - proto
   - ptypes/empty
   - ptypes/timestamp
+- name: github.com/pkg/errors
+  version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
+- name: golang.org/x/crypto
+  version: 84e98f45760e87786b7f24603b8166a6fa09811d
+  subpackages:
+  - bcrypt
+  - blowfish
 - name: golang.org/x/net
-  version: 0d8126fc6144eb5257485c59148128691e8ff849
+  version: cd95c68ba21fc7ee16ee38cc420473e3d8c4afd8
   subpackages:
   - context
   - http2

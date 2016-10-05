@@ -6,17 +6,27 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	pb "github.com/leandro-lugaresi/grpc-realtime-chat/server/user/userpb"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 )
 
-// UserService represets a service for User operations
-type UserService interface {
-	GetUserByUsername(username string) (*pb.User, error)
-	CreateUser(*pb.User) error
-}
-
 type authServer struct {
 	jwtPrivateKey *rsa.PrivateKey
+}
+
+type User struct {
+	pb.User
+	Password       string
+	CreatedAt      int64
+	UpdatedAt      int64
+	LastActivityAt int64
+}
+
+// UserService represets a service for User operations
+type UserService interface {
+	GetUserByUsername(username string) (*User, error)
+	CreateUser(*User) error
 }
 
 func NewAuthServer(rsaPrivateKey []byte) (*authServer, error) {
@@ -29,9 +39,16 @@ func NewAuthServer(rsaPrivateKey []byte) (*authServer, error) {
 }
 
 func (as *authServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token, error) {
-	user := &pb.User{
-		Username: r.Username,
-		Name:     r.Name,
+	pass, err := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to encrypt the Password")
+	}
+	user := &User{
+		User: pb.User{
+			Name:     r.Name,
+			Username: r.Username,
+		},
+		Password: string(pass),
 	}
 
 }
