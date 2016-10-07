@@ -16,3 +16,4 @@ import:
   subpackages:
   - bcrypt
 - package: github.com/pkg/errors
+- package: github.com/satori/go.uuid

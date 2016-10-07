@@ -1,5 +1,5 @@
-hash: 5702d46a78b4e28880320b515d8e80bcf17eb66eadc92cb822fb7f5dee8bbc77
-updated: 2016-10-02T22:38:51.4247018-03:00
+hash: 030a1eeaca6d06c857e873615ba1f97de01f7aef6ef19ba71a1d1604fb65e1e2
+updated: 2016-10-05T09:02:19.0579635-03:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -11,6 +11,8 @@ imports:
   - ptypes/timestamp
 - name: github.com/pkg/errors
   version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
+- name: github.com/satori/go.uuid
+  version: b061729afc07e77a8aa4fad0a2fd840958f1942a
 - name: golang.org/x/crypto
   version: 84e98f45760e87786b7f24603b8166a6fa09811d
   subpackages:
@@ -27,7 +29,7 @@ imports:
   - lex/httplex
   - trace
 - name: google.golang.org/grpc
-  version: 0032a855ba5c8a3c8e0d71c2deef354b70af1584
+  version: b1a2821ca5a4fd6b6e48ddfbb7d6d7584d839d21
   subpackages:
   - codes
   - credentials
