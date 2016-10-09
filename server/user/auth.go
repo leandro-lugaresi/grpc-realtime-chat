@@ -12,6 +12,8 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 type AuthServer struct {
@@ -38,13 +40,13 @@ type UserService interface {
 	CreateUser(*User) error
 }
 
-func NewAuthServer(rsaPrivateKey []byte, userService UserService) (*AuthServer, error) {
+func NewAuthServer(rsaPrivateKey []byte, s UserService) (*AuthServer, error) {
 	publickey, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing the jwt public key: %s", err)
 	}
 
-	return &AuthServer{publickey, userService}, nil
+	return &AuthServer{publickey, s}, nil
 }
 
 func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token, error) {
@@ -64,7 +66,7 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 		UpdatedAt:      t,
 		LastActivityAt: t,
 	}
-	err = as.userService.CreateUser(user)
+	err = as.UserService.CreateUser(user)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to signUp")
 	}
@@ -76,7 +78,20 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 }
 
 func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token, error) {
+	u, err := as.UserService.GetUserByUsername(r.Username)
+	if err != nil {
+		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Password))
+	if err != nil {
+		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
+	}
 
+	token, err := as.generateToken(u)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Token{token}, nil
 }
 
 func (as *AuthServer) generateToken(user *User) (string, error) {
@@ -91,7 +106,7 @@ func (as *AuthServer) generateToken(user *User) (string, error) {
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	ts, err := t.SignedString(as.jwtPrivateKey)
+	ts, err := t.SignedString(as.JwtPrivateKey)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to create the auth token")
 	}
