@@ -17,3 +17,9 @@ import:
   - bcrypt
 - package: github.com/pkg/errors
 - package: github.com/satori/go.uuid
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+  - require
+  - suite
+  - mock
