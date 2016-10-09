@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package chat;
+package chatpb;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
@@ -34,11 +34,11 @@ message Conversation {
 		INDIVIDUAL= 0;
 		GROUP= 1;
 	}
-	string uid = 1;
+	string id = 1;
 	string title = 2;
 	ConversationType type = 3;
-	// Collection with member uids  
-	repeated string member_uids = 4;
+	// Collection with member ids  
+	repeated string member_ids = 4;
 	bytes image = 5;
 	google.protobuf.Timestamp creation_time = 20;
 	// Last update time (changes on conversations or last message time sent)
@@ -46,8 +46,8 @@ message Conversation {
 }
 
 message Message {
-	string uid = 1;
-	string sender_uid = 2;
+	string id = 1;
+	string sender_id = 2;
 	oneof content {
 		ActionEvent event = 3;
 		string text = 5;
@@ -83,14 +83,14 @@ message TypingMessage {
 		UPLOADING_AUDIO = 3;
 		UPLOADING_PHOTO = 4;
 	}
-	string sender_uid = 1;
+	string sender_id = 1;
 	ActionType type = 2;
 }
 
 message CreateConversationRequest {
 	string title = 1;
 	Conversation.ConversationType type = 2;
-	repeated string member_uids = 3;
+	repeated string member_ids = 3;
 	bytes image = 4;
 }
 
@@ -101,7 +101,7 @@ message CreateConversationResponse {
 message GetConversationsRequest {
 	int32 limit = 1;
 	int32 offset = 2;
-	repeated string uid = 3;
+	repeated string id = 3;
 }
 
 message GetConversationsResponse {
@@ -109,16 +109,16 @@ message GetConversationsResponse {
 }
 
 message LeaveConversationRequest {
-	string conversation_uid = 1;
+	string conversation_id = 1;
 }
 
 message MemberRequest {
-	string conversation_uid = 1;
-	string user_uid = 2;
+	string conversation_id = 1;
+	string user_id = 2;
 }
 
 message ChatMessage {
-	string conversation_uid = 1;
+	string conversation_id = 1;
 	oneof content {
 		TypingMessage typing = 2;
 		Message message = 3;
@@ -128,7 +128,7 @@ message ChatMessage {
 message GetHistoryRequest {
 	int32 limit = 1;
 	int32 offset = 2;
-	string conversation_uid = 3;
+	string conversation_id = 3;
 }
 
 message GetHistoryResponse {
@@ -136,6 +136,6 @@ message GetHistoryResponse {
 }
 
 message ReadHistoryRequest {
-	string last_message_uid = 1;
-	string conversation_uid = 2;
+	string last_message_id = 1;
+	string conversation_id = 2;
 }

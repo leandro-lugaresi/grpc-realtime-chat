@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package user;
+package userpb;
 
 import "google/protobuf/empty.proto";
 
@@ -19,7 +19,7 @@ service UserService {
 }
 
 message User {
-	string uid = 1;
+	string id = 1;
 	string name = 2;
 	string username = 3;
 	bytes photo = 4;
@@ -48,7 +48,7 @@ message UpdateProfileRequest {
 }
 
 message GetUsersRequest {
-	repeated string uids = 1;
+	repeated string ids = 1;
 	string name = 2;
 	string username = 3;
 }
