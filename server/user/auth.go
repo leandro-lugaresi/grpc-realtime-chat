@@ -18,15 +18,7 @@ import (
 
 type AuthServer struct {
 	JwtPrivateKey *rsa.PrivateKey
-	UserService   UserService
-}
-
-type User struct {
-	pb.User
-	Password       string
-	CreatedAt      int64
-	UpdatedAt      int64
-	LastActivityAt int64
+	UserManager   UserManager
 }
 
 type AuthClaims struct {
@@ -34,13 +26,7 @@ type AuthClaims struct {
 	jwt.StandardClaims
 }
 
-// UserService represets a service for User operations
-type UserService interface {
-	GetUserByUsername(username string) (*User, error)
-	CreateUser(*User) error
-}
-
-func NewAuthServer(rsaPrivateKey []byte, s UserService) (*AuthServer, error) {
+func NewAuthServer(rsaPrivateKey []byte, s UserManager) (*AuthServer, error) {
 	publickey, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing the jwt public key: %s", err)
@@ -66,7 +52,7 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 		UpdatedAt:      t,
 		LastActivityAt: t,
 	}
-	err = as.UserService.CreateUser(user)
+	err = as.UserManager.CreateUser(user)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to signUp")
 	}
@@ -78,7 +64,7 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 }
 
 func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token, error) {
-	u, err := as.UserService.GetUserByUsername(r.Username)
+	u, err := as.UserManager.GetUserByUsername(r.Username)
 	if err != nil {
 		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
 	}
