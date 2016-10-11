@@ -26,6 +26,10 @@ type UserService struct {
 	UserManager UserManager
 }
 
+func NewUserService(s UserManager) *UserService {
+	return &UserService{s}
+}
+
 func (s *UserService) ChangePassword(ctx context.Context, r *pb.ChangePasswordRequest) (*google_protobuf.Empty, error) {
 	return &google_protobuf.Empty{}, nil
 }

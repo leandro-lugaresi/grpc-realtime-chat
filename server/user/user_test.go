@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type UserManager struct {
@@ -46,34 +47,40 @@ type UserServiceSuite struct {
 	serverListener net.Listener
 	server         *grpc.Server
 	clientConn     *grpc.ClientConn
-	testClient     pb.AuthServiceClient
+	testClient     pb.UserServiceClient
 	ctx            context.Context
 	userManager    UserManager
+	jwtCreds       credentials.PerRPCCredentials
 }
 
-func (s *UserServiceSuite) SetupSuite() {
+func (s *UserServiceSuite) SetupTest() {
 	var err error
 
 	s.serverListener, err = net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(s.T(), err, "must be able to allocate a port for serverListener")
 	//Create the service
 	s.userManager = UserManager{}
-	serv, err := user.NewUserServer(&s.userManager)
-	require.NoError(s.T(), err, "must be able to create a authServer")
+	serv := user.NewUserService(&s.userManager)
 	// This is the point where we hook up the interceptor
 	s.server = grpc.NewServer()
-	pb.RegisterAuthServiceServer(s.server, serv)
+	pb.RegisterUserServiceServer(s.server, serv)
 
 	go func() {
 		s.server.Serve(s.serverListener)
 	}()
 
-	s.clientConn, err = grpc.Dial(s.serverListener.Addr().String(), grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
+	s.clientConn, err = grpc.Dial(
+		s.serverListener.Addr().String(),
+		grpc.WithInsecure(),
+		grpc.WithPerRPCCredentials(),
+		grpc.WithTimeout(2*time.Second)
+	)
 	require.NoError(s.T(), err, "must not error on client Dial")
-	s.testClient = pb.NewAuthServiceClient(s.clientConn)
+	s.testClient = pb.NewUserServiceClient(s.clientConn)
+	s.ctx, _ = context.WithTimeout(context.TODO(), 1*time.Second)
 }
 
-func (s *UserServiceSuite) TearDownSuite() {
+func (s *UserServiceSuite) TearDownTest() {
 	if s.serverListener != nil {
 		s.server.Stop()
 		s.T().Logf("stopped grpc.Server at: %v", s.serverListener.Addr().String())
@@ -85,6 +92,11 @@ func (s *UserServiceSuite) TearDownSuite() {
 	}
 }
 
-func (s *UserServiceSuite) SetupTest() {
-	s.ctx, _ = context.WithTimeout(context.TODO(), 1*time.Second)
+func (s *UserServiceSuite) ChangePassword() {
+	r := &pb.ChangePasswordRequest{
+		NewPassword: "foooo-bar-baz",
+		OldPassword: "foo-123",
+	}
+	s.ctx.
+	s.testClient.ChangePassword(s.ctx, r)
 }
