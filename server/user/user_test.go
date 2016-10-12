@@ -53,6 +53,22 @@ type UserServiceSuite struct {
 	jwtCreds       credentials.PerRPCCredentials
 }
 
+func (s *UserServiceSuite) SetupSuite() {
+	// pkData, err := ioutil.ReadFile("../test/rsa_sample_key")
+	// require.NoError(s.T(), err, "must be able to read the PEM for tests")
+	// pk, err := jwt.ParseRSAPrivateKeyFromPEM(pkData)
+	// require.NoError(s.T(), err, "must be able to parse the PEM")
+
+	// t := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
+	// 	Audience:  "118f3f16-84ed-4a4a-923f-77e4ffde04b6",
+	// 	ExpiresAt: time.Now().Add(time.Hour * 96).Unix(),
+	// 	Issuer:    "auth.service",
+	// 	IssuedAt:  time.Now().Unix(),
+	// })
+	// ts, err := t.SignedString(pk)
+
+}
+
 func (s *UserServiceSuite) SetupTest() {
 	var err error
 
@@ -72,8 +88,7 @@ func (s *UserServiceSuite) SetupTest() {
 	s.clientConn, err = grpc.Dial(
 		s.serverListener.Addr().String(),
 		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(),
-		grpc.WithTimeout(2*time.Second)
+		grpc.WithPerRPCCredentials(s.jwtCreds),
 	)
 	require.NoError(s.T(), err, "must not error on client Dial")
 	s.testClient = pb.NewUserServiceClient(s.clientConn)
@@ -90,13 +105,4 @@ func (s *UserServiceSuite) TearDownTest() {
 	if s.clientConn != nil {
 		s.clientConn.Close()
 	}
-}
-
-func (s *UserServiceSuite) ChangePassword() {
-	r := &pb.ChangePasswordRequest{
-		NewPassword: "foooo-bar-baz",
-		OldPassword: "foo-123",
-	}
-	s.ctx.
-	s.testClient.ChangePassword(s.ctx, r)
 }

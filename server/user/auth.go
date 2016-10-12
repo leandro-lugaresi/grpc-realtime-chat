@@ -2,7 +2,6 @@ package user
 
 import (
 	"crypto/rsa"
-	"fmt"
 
 	"time"
 
@@ -21,18 +20,13 @@ type AuthServer struct {
 	UserManager   UserManager
 }
 
-type AuthClaims struct {
-	ID string `json:"id"`
-	jwt.StandardClaims
-}
-
 func NewAuthServer(rsaPrivateKey []byte, s UserManager) (*AuthServer, error) {
-	publickey, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
+	pk, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing the jwt public key: %s", err)
+		return nil, errors.Wrap(err, "Error parsing the jwt private key")
 	}
 
-	return &AuthServer{publickey, s}, nil
+	return &AuthServer{pk, s}, nil
 }
 
 func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token, error) {
@@ -81,16 +75,12 @@ func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token
 }
 
 func (as *AuthServer) generateToken(user *User) (string, error) {
-	claims := AuthClaims{
-		user.Id,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 96).Unix(),
-			Issuer:    "auth.service",
-			IssuedAt:  time.Now().Unix(),
-			Subject:   user.Username,
-		},
+	claims := jwt.StandardClaims{
+		Audience:  user.Id,
+		ExpiresAt: time.Now().Add(time.Hour * 96).Unix(),
+		Issuer:    "auth.service",
+		IssuedAt:  time.Now().Unix(),
 	}
-
 	t := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	ts, err := t.SignedString(as.JwtPrivateKey)
 	if err != nil {

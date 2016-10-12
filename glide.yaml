@@ -10,6 +10,9 @@ import:
   - context
 - package: google.golang.org/grpc
   version: ^1.0.1-GA
+  subpackages:
+  - codes
+  - metadata
 - package: github.com/dgrijalva/jwt-go
   version: ^3.0.0
 - package: golang.org/x/crypto
