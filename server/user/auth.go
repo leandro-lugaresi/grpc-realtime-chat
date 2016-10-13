@@ -62,8 +62,7 @@ func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token
 	if err != nil {
 		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Password))
-	if err != nil {
+	if bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Password)) != nil {
 		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
 	}
 
