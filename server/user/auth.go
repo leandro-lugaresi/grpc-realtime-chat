@@ -2,7 +2,6 @@ package user
 
 import (
 	"crypto/rsa"
-	"fmt"
 
 	"time"
 
@@ -18,35 +17,16 @@ import (
 
 type AuthServer struct {
 	JwtPrivateKey *rsa.PrivateKey
-	UserService   UserService
+	UserManager   UserManager
 }
 
-type User struct {
-	pb.User
-	Password       string
-	CreatedAt      int64
-	UpdatedAt      int64
-	LastActivityAt int64
-}
-
-type AuthClaims struct {
-	ID string `json:"id"`
-	jwt.StandardClaims
-}
-
-// UserService represets a service for User operations
-type UserService interface {
-	GetUserByUsername(username string) (*User, error)
-	CreateUser(*User) error
-}
-
-func NewAuthServer(rsaPrivateKey []byte, s UserService) (*AuthServer, error) {
-	publickey, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
+func NewAuthServer(rsaPrivateKey []byte, s UserManager) (*AuthServer, error) {
+	pk, err := jwt.ParseRSAPrivateKeyFromPEM(rsaPrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing the jwt public key: %s", err)
+		return nil, errors.Wrap(err, "Error parsing the jwt private key")
 	}
 
-	return &AuthServer{publickey, s}, nil
+	return &AuthServer{pk, s}, nil
 }
 
 func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token, error) {
@@ -66,7 +46,7 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 		UpdatedAt:      t,
 		LastActivityAt: t,
 	}
-	err = as.UserService.CreateUser(user)
+	err = as.UserManager.CreateUser(user)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to signUp")
 	}
@@ -78,12 +58,11 @@ func (as *AuthServer) SignUp(cx context.Context, r *pb.SignUpRequest) (*pb.Token
 }
 
 func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token, error) {
-	u, err := as.UserService.GetUserByUsername(r.Username)
+	u, err := as.UserManager.GetUserByUsername(r.Username)
 	if err != nil {
 		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Password))
-	if err != nil {
+	if bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Password)) != nil {
 		return nil, grpc.Errorf(codes.PermissionDenied, "Username or password invalid")
 	}
 
@@ -95,16 +74,12 @@ func (as *AuthServer) SignIn(cx context.Context, r *pb.SignInRequest) (*pb.Token
 }
 
 func (as *AuthServer) generateToken(user *User) (string, error) {
-	claims := AuthClaims{
-		user.Id,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 96).Unix(),
-			Issuer:    "auth.service",
-			IssuedAt:  time.Now().Unix(),
-			Subject:   user.Username,
-		},
+	claims := jwt.StandardClaims{
+		Audience:  user.Id,
+		ExpiresAt: time.Now().Add(time.Hour * 96).Unix(),
+		Issuer:    "auth.service",
+		IssuedAt:  time.Now().Unix(),
 	}
-
 	t := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	ts, err := t.SignedString(as.JwtPrivateKey)
 	if err != nil {

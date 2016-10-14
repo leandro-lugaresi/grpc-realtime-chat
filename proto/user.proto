@@ -13,6 +13,7 @@ service AuthService {
 service UserService {
 	rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty) {}
 
+	// Get Users by id or find users by username or name
 	rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
 
 	rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty) {}

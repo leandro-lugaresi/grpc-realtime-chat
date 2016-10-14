@@ -10,39 +10,17 @@ import (
 	"github.com/leandro-lugaresi/grpc-realtime-chat/server/user"
 	pb "github.com/leandro-lugaresi/grpc-realtime-chat/server/user/userpb"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-type UserService struct {
-	mock.Mock
+func TestAuthServiceSuite(t *testing.T) {
+	suite.Run(t, &AuthServiceSuite{})
 }
 
-func (s *UserService) CreateUser(user *user.User) error {
-	ret := s.Mock.Called()
-	return ret.Error(0)
-}
-
-func (s *UserService) GetUserByUsername(username string) (*user.User, error) {
-	ret := s.Called()
-
-	var r0 *user.User
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*user.User)
-	}
-	r1 := ret.Error(1)
-
-	return r0, r1
-}
-
-func TestServerAuthSuite(t *testing.T) {
-	suite.Run(t, &ServerAuthTestSuite{})
-}
-
-type ServerAuthTestSuite struct {
+type AuthServiceSuite struct {
 	suite.Suite
 
 	serverListener net.Listener
@@ -50,10 +28,10 @@ type ServerAuthTestSuite struct {
 	clientConn     *grpc.ClientConn
 	testClient     pb.AuthServiceClient
 	ctx            context.Context
-	userService    UserService
+	userManager    UserManager
 }
 
-func (s *ServerAuthTestSuite) SetupSuite() {
+func (s *AuthServiceSuite) SetupSuite() {
 	var err error
 
 	s.serverListener, err = net.Listen("tcp", "127.0.0.1:0")
@@ -61,8 +39,8 @@ func (s *ServerAuthTestSuite) SetupSuite() {
 	//Create the service
 	keyData, err := ioutil.ReadFile("../test/rsa_sample_key")
 	require.NoError(s.T(), err, "must be able to read the rsa_key for tests")
-	s.userService = UserService{}
-	serv, err := user.NewAuthServer(keyData, &s.userService)
+	s.userManager = UserManager{}
+	serv, err := user.NewAuthServer(keyData, &s.userManager)
 	require.NoError(s.T(), err, "must be able to create a authServer")
 	// This is the point where we hook up the interceptor
 	s.server = grpc.NewServer()
@@ -77,7 +55,7 @@ func (s *ServerAuthTestSuite) SetupSuite() {
 	s.testClient = pb.NewAuthServiceClient(s.clientConn)
 }
 
-func (s *ServerAuthTestSuite) TearDownSuite() {
+func (s *AuthServiceSuite) TearDownSuite() {
 	if s.serverListener != nil {
 		s.server.Stop()
 		s.T().Logf("stopped grpc.Server at: %v", s.serverListener.Addr().String())
@@ -89,12 +67,12 @@ func (s *ServerAuthTestSuite) TearDownSuite() {
 	}
 }
 
-func (s *ServerAuthTestSuite) SetupTest() {
+func (s *AuthServiceSuite) SetupTest() {
 	s.ctx, _ = context.WithTimeout(context.TODO(), 1*time.Second)
 }
 
-func (s *ServerAuthTestSuite) TestSignUp() {
-	s.userService.On("CreateUser").Return(nil)
+func (s *AuthServiceSuite) TestSignUp() {
+	s.userManager.On("CreateUser").Return(nil)
 	r := pb.SignUpRequest{
 		Name:     "Jhon Doe",
 		Username: "jhon_doe",
@@ -105,8 +83,8 @@ func (s *ServerAuthTestSuite) TestSignUp() {
 	assert.NotEmpty(s.T(), token, "Token must have a value")
 }
 
-func (s *ServerAuthTestSuite) TestSignIn() {
-	s.userService.On("GetUserByUsername").Return(&user.User{
+func (s *AuthServiceSuite) TestSignIn() {
+	s.userManager.On("GetUserByUsername").Return(&user.User{
 		User: pb.User{
 			Id:       "118f3f16-84ed-4a4a-923f-77e4ffde04b6",
 			Name:     "Jhon Doe",
@@ -123,8 +101,8 @@ func (s *ServerAuthTestSuite) TestSignIn() {
 	assert.NotEmpty(s.T(), token, "Token must have a value")
 }
 
-func (s *ServerAuthTestSuite) TestSignInShouldReturnErrorWhenPasswordsAreNotEqual() {
-	s.userService.On("GetUserByUsername").Return(&user.User{
+func (s *AuthServiceSuite) TestSignInShouldReturnErrorWhenPasswordsAreNotEqual() {
+	s.userManager.On("GetUserByUsername").Return(&user.User{
 		User: pb.User{
 			Id:       "118f3f16-84ed-4a4a-923f-77e4ffde04b6",
 			Name:     "Jhon Doe",
