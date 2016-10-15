@@ -11,38 +11,46 @@ type UserManager struct {
 }
 
 func (m UserManager) GetUserByUsername(username string) (*user.User, error) {
-	user := &user.User{}
-
-	rows, err := db.Query("SELECT id, name, username, password,  FROM users WHERE username=?", username)
+	u := &user.User{}
+	err := m.db.QueryRow("SELECT id, name, username, password, created_at, updated_at last_activity_at FROM users WHERE username=?", username).Scan(
+		u.Id,
+		u.Name,
+		u.Username,
+		u.Password,
+		u.CreatedAt,
+		u.UpdatedAt,
+		u.LastActivityAt)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&rawUser); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	err = proto.Unmarshal(rawUser, user)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return u, nil
 }
+
 func (m UserManager) GetUserById(id string) (*user.User, error) {
-
+	u := &user.User{}
+	err := m.db.QueryRow("SELECT id, name, username, password, created_at, updated_at last_activity_at FROM users WHERE id=?", id).Scan(
+		u.Id,
+		u.Name,
+		u.Username,
+		u.Password,
+		u.CreatedAt,
+		u.UpdatedAt,
+		u.LastActivityAt)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
+
 func (m UserManager) UpdateUser(*user.User) error {
 
 }
-func (m UserManager) CreateUser(*user.User) error {
 
+func (m UserManager) CreateUser(*user.User) error {
+	stmp, err := m.db.Prepare("INSERT INTO users(`id`,`username`,`name`,`password`,`created_at`,`updated_at`,`last_activity_at`) VALUES (?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+
+	}
 }
 func (m UserManager) FindUsersByUsernameOrName(username string, name string) ([]*user.User, error) {
 
