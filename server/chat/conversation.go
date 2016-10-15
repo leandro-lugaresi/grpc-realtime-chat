@@ -1,0 +1,140 @@
+package chat
+
+import (
+	"crypto/rsa"
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	google_protobuf "github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/leandro-lugaresi/grpc-realtime-chat/server/auth"
+	pb "github.com/leandro-lugaresi/grpc-realtime-chat/server/chat/chatpb"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+)
+
+type ConversationManager interface {
+	GetByUserID(userID string, limit int32, offset int32) ([]*pb.Conversation, error)
+	GetByID(ID string) (*pb.Conversation, error)
+	Create(*pb.Conversation) error
+	Update(*pb.Conversation) error
+}
+
+type ConversationService struct {
+	jwtPublicKey        *rsa.PublicKey
+	conversationManager ConversationManager
+}
+
+func NewConversationService(rsaPublicKey []byte, m ConversationManager) (*ConversationService, error) {
+	pk, err := jwt.ParseRSAPublicKeyFromPEM(rsaPublicKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error parsing the jwt public key")
+	}
+	return &ConversationService{pk, m}, nil
+}
+
+func (s *ConversationService) Get(ctx context.Context, r *pb.GetConversationsRequest) (*pb.GetConversationsResponse, error) {
+	ID, err := s.getUserIDAuthenticated(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c, err := s.conversationManager.GetByUserID(ID, r.Limit, r.Offset)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.GetConversationsResponse{c}, nil
+}
+
+func (s *ConversationService) Create(ctx context.Context, r *pb.CreateConversationRequest) (*pb.CreateConversationResponse, error) {
+	t := &timestamp.Timestamp{Seconds: time.Now().Unix()}
+	c := &pb.Conversation{
+		Id:           uuid.NewV4().String(),
+		Title:        r.Title,
+		MemberIds:    r.MemberIds,
+		Type:         r.Type,
+		CreationTime: t,
+		UpdateTime:   t,
+	}
+	err := s.conversationManager.Create(c)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.CreateConversationResponse{c}, nil
+}
+
+func (s *ConversationService) Leave(ctx context.Context, r *pb.LeaveConversationRequest) (*google_protobuf.Empty, error) {
+	ID, err := s.getUserIDAuthenticated(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c, err := s.conversationManager.GetByID(r.ConversationId)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+
+	removeMember(c, ID)
+
+	err = s.conversationManager.Update(c)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+	return &google_protobuf.Empty{}, nil
+}
+
+func (s *ConversationService) AddMember(ctx context.Context, r *pb.MemberRequest) (*google_protobuf.Empty, error) {
+	ID, err := s.getUserIDAuthenticated(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c, err := s.conversationManager.GetByID(r.ConversationId)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+
+	c.MemberIds = append(c.MemberIds, ID)
+
+	err = s.conversationManager.Update(c)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+	return &google_protobuf.Empty{}, nil
+}
+
+func (s *ConversationService) RemoveMember(ctx context.Context, r *pb.MemberRequest) (*google_protobuf.Empty, error) {
+	_, ok := auth.GetTokenFromContext(ctx, s.jwtPublicKey)
+	if !ok {
+		return nil, grpc.Errorf(codes.Unauthenticated, "valid token required.")
+	}
+	c, err := s.conversationManager.GetByID(r.ConversationId)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+
+	removeMember(c, r.UserId)
+
+	err = s.conversationManager.Update(c)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, err.Error())
+	}
+	return &google_protobuf.Empty{}, nil
+}
+
+func (s *ConversationService) getUserIDAuthenticated(ctx context.Context) (string, error) {
+	token, ok := auth.GetTokenFromContext(ctx, s.jwtPublicKey)
+	if !ok {
+		return "", grpc.Errorf(codes.Unauthenticated, "valid token required.")
+	}
+	claims := token.Claims.(*jwt.StandardClaims)
+	return claims.Audience, nil
+}
+
+func removeMember(c *pb.Conversation, ID string) {
+	for i, m := range c.MemberIds {
+		if m == ID {
+			c.MemberIds = append(c.MemberIds[:i], c.MemberIds[i+1:]...)
+		}
+	}
+}
