@@ -29,7 +29,7 @@ type UserManager interface {
 	GetUserById(id string) (*User, error)
 	UpdateUser(*User) error
 	CreateUser(*User) error
-	FindUsersByUsernameOrName(username string, name string) ([]*User, error)
+	FindUsersByUsernameOrName(name string) ([]*User, error)
 	FindUsersByIds(ids []string) ([]*User, error)
 }
 
