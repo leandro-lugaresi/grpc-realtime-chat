@@ -4,6 +4,8 @@ import (
 	"database/sql"
 
 	"github.com/leandro-lugaresi/grpc-realtime-chat/server/user"
+	"fmt"
+	"bytes"
 )
 
 type UserManager struct {
@@ -61,15 +63,42 @@ func (m UserManager) CreateUser(u *user.User) error {
 }
 
 func (m UserManager) FindUsersByUsernameOrName(name string) ([]*user.User, error) {
-	users := []*user.User{}
 	rows, err := m.db.Query("SELECT id, name, username, password, created_at, updated_at last_activity_at FROM users WHERE username LIKE '?%' OR name LIKE '?%' LIMIT 100", name, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	for rows.Next() {
+	users, err := scanRows(rows)
+
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (m UserManager) FindUsersByIds(ids []string) ([]*user.User, error) {
+	if len(ids) = 0 {
+		return nil, fmt.Errorf("The param ids is required and can't be empty")
+	}
+	sql := "SELECT id, name, username, password, created_at, updated_at last_activity_at FROM users WHERE id IN (?" + strings.Repeat(",?", len(ids)-1) + ") LIMIT 100"
+	r, err := m.db.Query(sql, ids...);
+	if err != nil {
+		return nil, err
+	}
+
+	defer r.Close()
+	users, err := scanRows(r,)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func scanRows(r *sql.Rows) []*user.User, err {
+	users := []*user.User{}
+	for r.Next() {
 		u := &user.User{}
-		err := rows.Scan(
+		err := r.Scan(
 			u.Id,
 			u.Name,
 			u.Username,
@@ -82,13 +111,5 @@ func (m UserManager) FindUsersByUsernameOrName(name string) ([]*user.User, error
 		}
 		users = append(users, u)
 	}
-
-	if err != nil {
-		return nil, err
-	}
 	return users, nil
-}
-
-func (m UserManager) FindUsersByIds(ids []string) ([]*user.User, error) {
-
 }
