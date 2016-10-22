@@ -1,6 +1,7 @@
 .PHONY: generate-protobuf
 
 #### PROJECT SETTINGS ####
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_path = $(dir $(mkfile_path))
 server_path = server
 export_go_path = export GOPATH=$(current_path)/vendor:$(current_path)
