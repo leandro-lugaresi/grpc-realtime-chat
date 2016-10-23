@@ -1,4 +1,4 @@
-package: .
+package: github.com/leandro-lugaresi/grpc-realtime-chat
 import:
 - package: github.com/golang/protobuf
   subpackages:
@@ -8,11 +8,13 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
+  - trace
 - package: google.golang.org/grpc
   version: ^1.0.1-GA
   subpackages:
   - codes
   - metadata
+  - credentials
 - package: github.com/dgrijalva/jwt-go
   version: ^3.0.0
 - package: golang.org/x/crypto
@@ -26,3 +28,7 @@ import:
   - require
   - suite
   - mock
+- package: github.com/kelseyhightower/envconfig
+  version: ^1.2.0
+- package: github.com/go-sql-driver/mysql
+  version: ^1.2.0

@@ -29,7 +29,7 @@ type UserManager interface {
 	GetUserById(id string) (*User, error)
 	UpdateUser(*User) error
 	CreateUser(*User) error
-	FindUsersByUsernameOrName(username string, name string) ([]*User, error)
+	FindUsersByUsernameOrName(name string) ([]*User, error)
 	FindUsersByIds(ids []string) ([]*User, error)
 }
 
@@ -91,8 +91,11 @@ func (s *UserService) GetUsers(ctx context.Context, r *pb.GetUsersRequest) (*pb.
 	if len(r.Ids) > 0 {
 		users, err = s.UserManager.FindUsersByIds(r.Ids)
 	}
-	if len(r.Name) > 3 || len(r.Username) > 3 {
-		users, err = s.UserManager.FindUsersByUsernameOrName(r.Username, r.Name)
+	if len(r.Name) > 3 {
+		users, err = s.UserManager.FindUsersByUsernameOrName(r.Name)
+	}
+	if len(r.Username) > 3 {
+		users, err = s.UserManager.FindUsersByUsernameOrName(r.Username)
 	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to get the users")
