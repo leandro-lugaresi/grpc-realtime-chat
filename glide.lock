@@ -1,16 +1,26 @@
-hash: 3ab382d49e78f97c9991833d23ad50683f939ae88d047e621372a3f650be3c55
-updated: 2016-10-22T18:09:02.257317391-02:00
+hash: 2ffab22cf03710ef945bd62a9e6d088ec2ce869d425aa22c444d9cb9b5cf79c1
+updated: 2016-10-24T18:09:17.272719-02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/go-sql-driver/mysql
   version: a732e14c62dde3285440047bba97581bc472ae18
+- name: github.com/gocql/gocql
+  version: 8fddba88e0d246cabfb37be496813a5c30979ad6
+  subpackages:
+  - internal/lru
+  - internal/murmur
+  - internal/streams
 - name: github.com/golang/protobuf
   version: df1d3ca07d2d07bba352d5b73c4313b4e2a6203e
   subpackages:
   - proto
   - ptypes/empty
   - ptypes/timestamp
+- name: github.com/golang/snappy
+  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+- name: github.com/hailocab/go-hostpool
+  version: e80d13ce29ede4452c43dea11e79b9bc8a15b478
 - name: github.com/kelseyhightower/envconfig
   version: 9aca109c9aec4633fced9717c4a09ecab3d33111
 - name: github.com/pkg/errors
@@ -50,6 +60,8 @@ imports:
   - naming
   - peer
   - transport
+- name: gopkg.in/inf.v0
+  version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9

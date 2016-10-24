@@ -17,10 +17,13 @@ import (
 )
 
 type ConversationManager interface {
+	CreateSchema(schema string) error
 	GetByUserID(userID string, limit int32, offset int32) ([]*pb.Conversation, error)
-	GetByID(ID string) (*pb.Conversation, error)
+	GetByID(id string) (*pb.Conversation, error)
 	Create(*pb.Conversation) error
 	Update(*pb.Conversation) error
+	AddMember(cID, memberID string) error
+	RemoveMember(cID, memberID string) error
 }
 
 type ConversationService struct {
@@ -66,38 +69,22 @@ func (s *ConversationService) Create(ctx context.Context, r *pb.CreateConversati
 }
 
 func (s *ConversationService) Leave(ctx context.Context, r *pb.LeaveConversationRequest) (*google_protobuf.Empty, error) {
-	ID, err := s.getUserIDAuthenticated(ctx)
+	id, err := s.getUserIDAuthenticated(ctx)
 	if err != nil {
 		return nil, err
 	}
-	c, err := s.conversationManager.GetByID(r.ConversationId)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Internal, err.Error())
-	}
-
-	removeMember(c, ID)
-
-	err = s.conversationManager.Update(c)
-	if err != nil {
+	if err = s.conversationManager.RemoveMember(r.ConversationId, id); err != nil {
 		return nil, grpc.Errorf(codes.Internal, err.Error())
 	}
 	return &google_protobuf.Empty{}, nil
 }
 
 func (s *ConversationService) AddMember(ctx context.Context, r *pb.MemberRequest) (*google_protobuf.Empty, error) {
-	ID, err := s.getUserIDAuthenticated(ctx)
-	if err != nil {
-		return nil, err
+	_, ok := auth.GetTokenFromContext(ctx, s.jwtPublicKey)
+	if !ok {
+		return nil, grpc.Errorf(codes.Unauthenticated, "valid token required.")
 	}
-	c, err := s.conversationManager.GetByID(r.ConversationId)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Internal, err.Error())
-	}
-
-	c.MemberIds = append(c.MemberIds, ID)
-
-	err = s.conversationManager.Update(c)
-	if err != nil {
+	if err := s.conversationManager.AddMember(r.ConversationId, r.UserId); err != nil {
 		return nil, grpc.Errorf(codes.Internal, err.Error())
 	}
 	return &google_protobuf.Empty{}, nil
@@ -108,15 +95,7 @@ func (s *ConversationService) RemoveMember(ctx context.Context, r *pb.MemberRequ
 	if !ok {
 		return nil, grpc.Errorf(codes.Unauthenticated, "valid token required.")
 	}
-	c, err := s.conversationManager.GetByID(r.ConversationId)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Internal, err.Error())
-	}
-
-	removeMember(c, r.UserId)
-
-	err = s.conversationManager.Update(c)
-	if err != nil {
+	if err := s.conversationManager.RemoveMember(r.ConversationId, r.UserId); err != nil {
 		return nil, grpc.Errorf(codes.Internal, err.Error())
 	}
 	return &google_protobuf.Empty{}, nil
@@ -129,12 +108,4 @@ func (s *ConversationService) getUserIDAuthenticated(ctx context.Context) (strin
 	}
 	claims := token.Claims.(*jwt.StandardClaims)
 	return claims.Audience, nil
-}
-
-func removeMember(c *pb.Conversation, ID string) {
-	for i, m := range c.MemberIds {
-		if m == ID {
-			c.MemberIds = append(c.MemberIds[:i], c.MemberIds[i+1:]...)
-		}
-	}
 }
