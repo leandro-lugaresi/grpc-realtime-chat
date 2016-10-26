@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"log"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -69,6 +70,7 @@ func (m MessageManager) GetMessages(conversationID string, limit int32, offset i
 		if len(image) > 0 {
 			ms.Content = &pb.Message_Image{Image: image}
 		}
+		log.Printf("received event: %v", event)
 		if event >= 0 {
 			ms.Content = &pb.Message_Event{Event: &pb.ActionEvent{Event: pb.ActionEvent_EventType(event)}}
 		}
@@ -80,6 +82,24 @@ func (m MessageManager) GetMessages(conversationID string, limit int32, offset i
 	return cl, nil
 }
 
-func (m MessageManager) SaveMessage(message *pb.Message) error {
-	return nil
+func (m MessageManager) SaveMessage(ms *pb.Message, conversationID string) error {
+	id, err := gocql.RandomUUID()
+	if err != nil {
+		id = gocql.TimeUUID()
+	}
+	event := ms.GetEvent()
+	e := -1
+	if event != nil {
+		e = int(event.Event)
+	}
+	cAt := time.Unix(ms.CreationTime.Seconds, int64(ms.CreationTime.Nanos))
+	dAt := time.Unix(ms.DeliveryTime.Seconds, int64(ms.DeliveryTime.Nanos))
+	return m.Session.Query("INSERT INTO messages "+
+		"(id, sender_id, conversation_id, text, audio, image, event, extra_params, readed, created_at, delivery_at) "+
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, ms.SenderId, conversationID, ms.GetText(), ms.GetAudio(), ms.GetImage(), e, event.GetExtraParams(), nil, cAt, dAt).Exec()
+}
+
+func (m MessageManager) ReadMessages(cID string, mID string) error {
+	return errors.New("Not implemented")
 }

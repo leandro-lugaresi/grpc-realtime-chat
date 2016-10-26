@@ -1,5 +1,5 @@
-hash: 2ffab22cf03710ef945bd62a9e6d088ec2ce869d425aa22c444d9cb9b5cf79c1
-updated: 2016-10-24T18:09:17.272719-02:00
+hash: 46d5f0660b4133930f21b73e47772e91a4b37915752d4c7985b9845070da980e
+updated: 2016-10-26T16:58:22.648514312-02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -23,6 +23,12 @@ imports:
   version: e80d13ce29ede4452c43dea11e79b9bc8a15b478
 - name: github.com/kelseyhightower/envconfig
   version: 9aca109c9aec4633fced9717c4a09ecab3d33111
+- name: github.com/nats-io/nats
+  version: fc85f44c1659ab6610d76fd6bd0e44ad2cadf697
+  subpackages:
+  - encoders/builtin
+- name: github.com/nats-io/nuid
+  version: 289cccf02c178dc782430d534e3c1f5b72af807f
 - name: github.com/pkg/errors
   version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
 - name: github.com/satori/go.uuid

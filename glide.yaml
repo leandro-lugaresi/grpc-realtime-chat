@@ -36,3 +36,5 @@ import:
 - package: github.com/golang/snappy
 - package: gopkg.in/inf.v0
 - package: github.com/hailocab/go-hostpool
+- package: github.com/nats-io/nats
+  version: v1.2.0

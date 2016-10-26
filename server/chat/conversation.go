@@ -40,11 +40,11 @@ func NewConversationService(rsaPublicKey []byte, m ConversationManager) (*Conver
 }
 
 func (s *ConversationService) Get(ctx context.Context, r *pb.GetConversationsRequest) (*pb.GetConversationsResponse, error) {
-	ID, err := s.getUserIDAuthenticated(ctx)
+	id, err := auth.GetUserIDAuthenticated(ctx, s.jwtPublicKey)
 	if err != nil {
 		return nil, err
 	}
-	c, err := s.conversationManager.GetByUserID(ID, r.Limit, r.Offset)
+	c, err := s.conversationManager.GetByUserID(id, r.Limit, r.Offset)
 	if err != nil {
 		return nil, grpc.Errorf(codes.Internal, err.Error())
 	}
@@ -69,7 +69,7 @@ func (s *ConversationService) Create(ctx context.Context, r *pb.CreateConversati
 }
 
 func (s *ConversationService) Leave(ctx context.Context, r *pb.LeaveConversationRequest) (*google_protobuf.Empty, error) {
-	id, err := s.getUserIDAuthenticated(ctx)
+	id, err := auth.GetUserIDAuthenticated(ctx, s.jwtPublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -99,13 +99,4 @@ func (s *ConversationService) RemoveMember(ctx context.Context, r *pb.MemberRequ
 		return nil, grpc.Errorf(codes.Internal, err.Error())
 	}
 	return &google_protobuf.Empty{}, nil
-}
-
-func (s *ConversationService) getUserIDAuthenticated(ctx context.Context) (string, error) {
-	token, ok := auth.GetTokenFromContext(ctx, s.jwtPublicKey)
-	if !ok {
-		return "", grpc.Errorf(codes.Unauthenticated, "valid token required.")
-	}
-	claims := token.Claims.(*jwt.StandardClaims)
-	return claims.Audience, nil
 }
