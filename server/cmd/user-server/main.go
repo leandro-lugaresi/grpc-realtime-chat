@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	manager "github.com/leandro-lugaresi/grpc-realtime-chat/server/mysql"
 	"github.com/leandro-lugaresi/grpc-realtime-chat/server/user"
+	manager "github.com/leandro-lugaresi/grpc-realtime-chat/server/user/mysql"
 	pb "github.com/leandro-lugaresi/grpc-realtime-chat/server/user/userpb"
 )
 

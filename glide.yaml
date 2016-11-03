@@ -32,3 +32,9 @@ import:
   version: ^1.2.0
 - package: github.com/go-sql-driver/mysql
   version: ^1.2.0
+- package: github.com/gocql/gocql
+- package: github.com/golang/snappy
+- package: gopkg.in/inf.v0
+- package: github.com/hailocab/go-hostpool
+- package: github.com/nats-io/nats
+  version: v1.2.0
