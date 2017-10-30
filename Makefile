@@ -10,9 +10,9 @@ export_go_path = export GOPATH=$(current_path)/vendor:$(current_path)
 
 #### TARGETS ####
 
-all: download-protofuf generate-protobuf
+all: download-protobuf generate-protobuf
 
-download-protofuf:
+download-protobuf:
 	rm -rf /tmp/googleapis && \
 	git clone https://github.com/google/googleapis.git /tmp/googleapis
 
